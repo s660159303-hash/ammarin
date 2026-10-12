@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hit the Mole</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;margin:0;overflow:hidden}
+body{font-family:"Baloo 2","Fredoka",Tahoma,"Noto Sans Thai","Segoe UI",sans-serif;font-weight:800;color:#5a2c0a;
+background:linear-gradient(#78cbff 0,#c4ecff 26%,#92de5c 26%,#4db53a 100%)}
+body:before{content:"";position:fixed;inset:26% 0 0 0;pointer-events:none;
+background:radial-gradient(circle,#fff 0 3px,transparent 4px) 0 0/90px 70px,radial-gradient(circle,#ffe14d 0 3px,transparent 4px) 40px 30px/110px 90px,radial-gradient(circle,#ff9ec0 0 3px,transparent 4px) 20px 50px/130px 100px}
+#fence{position:fixed;left:0;right:0;top:calc(26% - 34px);height:40px;background:repeating-linear-gradient(90deg,#c98a4b 0 14px,transparent 14px 40px) 0 0/100% 100% no-repeat,linear-gradient(#b87a3c,#b87a3c) 0 14px/100% 7px no-repeat,linear-gradient(#b87a3c,#b87a3c) 0 28px/100% 6px no-repeat;pointer-events:none}
+.cl{position:fixed;width:130px;height:44px;background:#fff;border-radius:44px;box-shadow:30px -20px 0 8px #fff,70px -6px 0 0 #fff;opacity:.95;animation:drift 60s linear infinite;pointer-events:none}
+@keyframes drift{from{transform:translateX(-200px)}to{transform:translateX(110vw)}}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.6vh;padding:env(safe-area-inset-top,0) 3vw env(safe-area-inset-bottom,0);overflow:hidden;text-align:center}
+.scr.on{display:flex}
+.ov{z-index:20;background:rgba(40,90,30,.55);backdrop-filter:blur(3px)}
+.logo{margin:0;font-size:clamp(44px,11vw,96px);line-height:1;color:#ffd23f;-webkit-text-stroke:9px #7a3e12;paint-order:stroke fill;text-shadow:0 8px 0 #5a2c0a;animation:bob 2.4s ease-in-out infinite}
+.logo span{color:#ff7a3d}
+@keyframes bob{50%{transform:translateY(-8px) rotate(-1deg)}}
+.btn{font:inherit;font-size:clamp(18px,3.4vh,28px);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.3);border:4px solid #fff;border-bottom-width:9px;border-radius:999px;padding:.4em 1.6em;min-width:min(70vw,300px);cursor:pointer;position:relative;overflow:hidden;box-shadow:0 8px 14px rgba(0,0,0,.25);transition:transform .12s}
+.btn:before{content:"";position:absolute;left:10%;right:10%;top:6%;height:38%;border-radius:99px;background:rgba(255,255,255,.4)}
+.btn:hover{transform:scale(1.06)}.btn:active{transform:translateY(5px);border-bottom-width:4px}
+.g{background:#33c93a;border-color:#b8f5a0 #b8f5a0 #1b8a22}.o{background:#ff9d1c;border-color:#ffe0a0 #ffe0a0 #c26a00}.b{background:#2f8bf0;border-color:#b8dcff #b8dcff #1558b0}.p{background:#8d52e0;border-color:#dcc4ff #dcc4ff #5a2aa8}.r{background:#ee3b32;border-color:#ffc4c0 #ffc4c0 #a3140f}
+.sm{min-width:0;width:clamp(46px,8vh,64px);height:clamp(46px,8vh,64px);padding:0;font-size:clamp(20px,3.6vh,30px);flex:none}
+.menu{display:flex;flex-direction:column;gap:1.4vh;align-items:center}
+.mm{width:clamp(150px,30vh,280px);animation:bob 1.8s ease-in-out infinite;filter:drop-shadow(0 12px 8px rgba(0,0,0,.25))}
+.pan{background:linear-gradient(#cf9250,#9c6330);border:4px solid #6b3f19;border-radius:18px;box-shadow:0 5px 0 #5a3412,0 8px 12px rgba(0,0,0,.25);padding:.2em .8em;display:flex;align-items:center;gap:.5em;color:#fff3d6;text-shadow:0 2px 0 #4a2a0a;position:relative}
+.pan small{display:block;font-size:11px;opacity:.85;line-height:1}.pan b{font-size:clamp(22px,4vh,34px);line-height:1;display:block}
+.pan .ic{font-size:clamp(26px,4.5vh,38px)}.bump{animation:bump .35s}
+@keyframes bump{40%{transform:scale(1.5);color:#ffe45c}}
+.bar{display:block;width:clamp(50px,12vw,110px);height:14px;background:#4a2a0a;border-radius:9px;overflow:hidden;border:2px solid #3a1f08}
+.bar u{display:block;height:100%;width:100%;background:linear-gradient(#6fd0ff,#1b86e0);border-radius:9px;transition:width .1s linear}
+.warn{animation:wp .45s infinite;background:linear-gradient(#ff7a6a,#d02a1c)}.warn .bar u{background:#ff4a3a}
+@keyframes wp{50%{transform:scale(1.1)}}
+.hud{display:flex;gap:1.5vw;align-items:center;justify-content:center;padding-top:1.5vh;flex-wrap:wrap}
+.qb{background:#fff8e0;border:5px solid #ffb300;border-radius:22px;box-shadow:0 6px 0 #c68600;padding:.3em 1em;font-size:clamp(18px,3.6vh,32px);max-width:94vw;margin-top:1vh;animation:qin .4s}
+@keyframes qin{from{transform:scale(.6);opacity:0}}
+#game{justify-content:flex-start}
+#board{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2vh 1.5vw;width:min(96vw,calc((100dvh - 200px)*1.1),720px);margin:auto 0;touch-action:none;cursor:none}
+.cell{position:relative;aspect-ratio:1/.9}
+.hole{position:absolute;left:4%;right:4%;bottom:4%;height:42%;border-radius:50%;background:radial-gradient(ellipse,#120702 52%,#8a5426 58%,#c98d48 100%);box-shadow:0 6px 0 #7a4a1f,0 10px 10px rgba(0,0,0,.25)}
+.lip{position:absolute;left:4%;right:4%;bottom:4%;height:21%;border-radius:0 0 50% 50%/0 0 100% 100%;border:6px solid #c98d48;border-top:0;box-shadow:0 6px 0 #7a4a1f;pointer-events:none}
+.clip{position:absolute;left:0;right:0;top:-10%;bottom:25%;overflow:hidden;pointer-events:none}
+.mole{position:absolute;left:12%;right:12%;bottom:0;aspect-ratio:1;transform:translateY(106%);transition:transform .22s cubic-bezier(.3,1.5,.5,1)}
+.mole.up{transform:translateY(0)}.mole.up svg{animation:idle 1.1s ease-in-out infinite}
+.mole.joy svg{animation:joy .35s ease-in-out infinite}.mole.shk svg{animation:shk .12s linear infinite}
+@keyframes idle{50%{transform:scale(1.03,.97)}}@keyframes joy{50%{transform:translateY(-8%) rotate(4deg)}}@keyframes shk{25%{transform:translateX(-7%)}75%{transform:translateX(7%)}}
+.mole svg{width:100%;height:100%;display:block;transform-origin:50% 100%}
+.pt{position:absolute;font-style:normal;font-size:clamp(14px,3vh,26px);pointer-events:none;z-index:5;animation:pt .9s ease-out forwards}
+@keyframes pt{to{transform:translate(var(--dx),var(--dy)) rotate(200deg) scale(.4);opacity:0}}
+.fl{position:absolute;left:50%;top:10%;font-size:clamp(24px,5vh,44px);z-index:6;pointer-events:none;-webkit-text-stroke:5px #fff;paint-order:stroke fill;animation:fl .9s ease-out forwards}
+@keyframes fl{from{transform:translate(-50%,0) scale(.5)}30%{transform:translate(-50%,-20px) scale(1.2)}to{transform:translate(-50%,-70px);opacity:0}}
+.xx{position:absolute;left:50%;top:-5%;font-size:clamp(40px,9vh,80px);color:#f01818;z-index:6;pointer-events:none;-webkit-text-stroke:5px #fff;paint-order:stroke fill;animation:fl .8s ease-out forwards}
+#flash{position:fixed;inset:0;background:radial-gradient(transparent 30%,rgba(255,0,0,.55));pointer-events:none;opacity:0;z-index:15}#flash.on{animation:fa .4s}
+@keyframes fa{from{opacity:1}to{opacity:0}}
+#ham{position:fixed;display:none;--hw:clamp(70px,13vh,110px);width:var(--hw);height:var(--hw);margin:calc(var(--hw)*-.25) 0 0 calc(var(--hw)*-.4);pointer-events:none;z-index:30;transform-origin:50% 100%;transform:rotate(-25deg);filter:drop-shadow(0 6px 4px rgba(0,0,0,.3))}
+#ham.sw{animation:sw .26s ease-in-out}
+@keyframes sw{0%{transform:rotate(-25deg)}40%{transform:rotate(25deg)}100%{transform:rotate(-25deg)}}
+.ring{position:fixed;width:20px;height:20px;margin:-10px;border:5px solid #fff;border-radius:50%;pointer-events:none;z-index:29;animation:rg .4s ease-out forwards}
+@keyframes rg{to{transform:scale(4);opacity:0}}
+.ps *{animation-play-state:paused!important}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:2vh 2vw;width:min(94vw,760px);max-height:70vh;overflow:auto;padding:8px}
+.card{font:inherit;color:#fff;border:5px solid #fff;border-bottom-width:10px;border-radius:26px;padding:1.2vh .5em;cursor:pointer;text-shadow:0 2px 0 rgba(0,0,0,.35);box-shadow:0 8px 14px rgba(0,0,0,.25);position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.card:before{content:"";position:absolute;left:8%;right:8%;top:5%;height:30%;border-radius:99px;background:rgba(255,255,255,.35)}
+.card:hover,.card:active{transform:scale(1.07) rotate(-1.5deg);box-shadow:0 14px 20px rgba(0,0,0,.35)}
+.card i{display:block;font-style:normal;font-size:clamp(34px,7vh,56px)}.card b{display:block;font-size:clamp(15px,2.6vh,20px)}.card small{font-size:13px;opacity:.95}
+.box{background:#fff8e0;border:6px solid #ffb300;border-radius:28px;box-shadow:0 8px 0 #c68600;padding:2vh 4vw;width:min(92vw,520px);max-height:72vh;overflow:auto;font-size:clamp(15px,2.6vh,20px);line-height:1.5}
+.box ol{text-align:left;margin:.3em 0;padding-left:1.4em}
+h2{margin:0;font-size:clamp(28px,6vh,48px);color:#ffd23f;-webkit-text-stroke:7px #7a3e12;paint-order:stroke fill;text-shadow:0 5px 0 #5a2c0a}
+.row{display:flex;justify-content:space-between;gap:1em;padding:.25em .5em;border-bottom:2px dashed #e8c06a}
+.big{font-size:clamp(40px,10vh,80px);color:#fff;-webkit-text-stroke:8px #c26a00;paint-order:stroke fill}
+.nh{font-size:clamp(22px,4vh,34px);color:#ffe45c;-webkit-text-stroke:5px #b86a00;paint-order:stroke fill;animation:wp .6s infinite}
+</style></head><body>
+<div class="cl" style="top:6%;animation-delay:-10s"></div><div class="cl" style="top:14%;animation-delay:-38s;transform:scale(.7)"></div><div id="fence"></div>
+
+<div id="menu" class="scr on">
+ <h1 class="logo">Hit the <span>Mole</span></h1>
+ <div id="mm" class="mm"></div>
+ <div class="menu">
+  <button class="btn g" data-go="subj">▶ เริ่มเกม</button>
+  <button class="btn o" data-go="how">❓ วิธีเล่น</button>
+  <button class="btn b" data-go="scores">🏆 คะแนนสูงสุด</button>
+  <button class="btn p" data-go="set">⚙️ Settings</button>
+ </div>
+</div>
+
+<div id="subj" class="scr"><h2>เลือกวิชา</h2><div class="grid" id="sg"></div><button class="btn o" data-go="menu">🏠 กลับ</button></div>
+
+<div id="how" class="scr"><h2>วิธีเล่น</h2><div class="box"><ol>
+<li>เลือกวิชาที่ต้องการ</li><li>อ่านคำถามด้านบน ตุ่นแต่ละตัวสวมหมวกที่เป็นคำตอบ</li><li>ใช้ค้อนตี (คลิก/แตะ) ตุ่นที่ใส่ <b>คำตอบที่ถูกต้อง</b></li>
+<li>ตอบถูก <b>+10</b> ตอบผิด <b>−5</b> (คะแนนต่ำสุด 0)</li><li>มีเวลา 60 วินาที ยิ่งเล่นนาน ตุ่นยิ่งเยอะและเร็ว!</li></ol></div><button class="btn o" data-go="menu">🏠 กลับ</button></div>
+
+<div id="scores" class="scr"><h2>🏆 Top 5</h2><div class="box" id="sl"></div><button class="btn o" data-go="menu">🏠 กลับ</button></div>
+
+<div id="set" class="scr"><h2>Settings</h2><div class="menu"><button class="btn b" id="bs2"></button><button class="btn r" id="bclr">🗑 ล้างคะแนน</button><button class="btn o" data-go="menu">🏠 กลับ</button></div></div>
+
+<div id="game" class="scr">
+ <div class="hud">
+  <div class="pan"><span class="ic">⭐</span><div><small>SCORE</small><b id="sc">000</b></div></div>
+  <div class="pan" id="tp"><span class="ic">⏱</span><div><small>TIME</small><b id="tm">60</b></div><i class="bar"><u id="tb"></u></i></div>
+  <button class="btn o sm" id="bPause">⏸</button><button class="btn p sm" id="bSnd">🔊</button>
+ </div>
+ <div class="qb" id="qb"></div>
+ <div id="board"></div>
+</div>
+
+<div id="pause" class="scr ov"><h2>⏸ หยุดชั่วคราว</h2><div class="menu">
+ <button class="btn g" id="pRes">▶ เล่นต่อ</button><button class="btn o" id="pRe">🔄 เริ่มใหม่</button><button class="btn b" id="pHome">🏠 กลับหน้าหลัก</button><button class="btn p" id="bs3"></button></div></div>
+
+<div id="over" class="scr ov"><h2 style="font-size:clamp(36px,9vh,70px)">GAME OVER</h2><div class="big" id="os">⭐ 000</div><div class="nh" id="nh" style="display:none">🏆 NEW HIGH SCORE!</div>
+ <div class="menu"><button class="btn g" id="oRe">🔄 เล่นอีกครั้ง</button><button class="btn b" id="oHome">🏠 หน้าหลัก</button></div></div>
+
+<div id="flash"></div><div id="ham"><svg viewBox="0 0 100 100"><defs><linearGradient id="hr" x1="0" x2="1"><stop offset="0" stop-color="#ff5a4a"/><stop offset="1" stop-color="#c81e1e"/></linearGradient></defs><rect x="40" y="38" width="14" height="60" rx="7" fill="#b9732f" stroke="#7a4518" stroke-width="3"/><rect x="8" y="6" width="84" height="38" rx="12" fill="url(#hr)" stroke="#8a1010" stroke-width="3"/><rect x="6" y="5" width="14" height="40" rx="6" fill="#ffc21a" stroke="#c78a00" stroke-width="2"/><rect x="80" y="5" width="14" height="40" rx="6" fill="#ffc21a" stroke="#c78a00" stroke-width="2"/><rect x="26" y="11" width="40" height="7" rx="3.5" fill="#fff" opacity=".4"/></svg></div>
+
+<script>
+const $=s=>document.querySelector(s),rnd=n=>Math.floor(Math.random()*n);
+/* ---------- Audio ---------- */
+let AC,snd=true;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state=='suspended')AC.resume()}
+function tn(f,d,ty='sine',v=.15,t=0,f2){if(!snd||!AC)return;const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+t;o.type=ty;o.frequency.setValueAtTime(f,s);if(f2)o.frequency.exponentialRampToValueAtTime(f2,s+d);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d+.02)}
+const S={click:()=>tn(660,.08,'triangle',.15,0,900),ok:()=>[523,659,784,1047].forEach((f,i)=>tn(f,.16,'triangle',.18,i*.07)),bad:()=>tn(240,.32,'sawtooth',.14,0,80),hit:()=>tn(170,.12,'square',.2,0,50),start:()=>[392,523,659,784].forEach((f,i)=>tn(f,.18,'square',.1,i*.1)),over:()=>[523,415,330,262].forEach((f,i)=>tn(f,.28,'triangle',.18,i*.18)),high:()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tn(f,.2,'triangle',.18,i*.1))};
+document.addEventListener('pointerdown',e=>{ac();if(e.target.closest('.btn,.card'))S.click()},true);
+function sndLbl(){const t=snd?'🔊 เสียง: เปิด':'🔇 เสียง: ปิด';['#bs2','#bs3'].forEach(s=>$(s).textContent=t);$('#bSnd').textContent=snd?'🔊':'🔇'}
+function togSnd(){snd=!snd;sndLbl()}
+
+/* ---------- Mole art ---------- */
+const HC=['#2fbf3a','#2f7be8','#ff9a1f','#8a5be0','#e8362f','#14b8b0'];
+function mSVG(f,t,col){
+ const sh=f=='shock',hp=f=='happy';
+ const eye=x=>hp?`<path d="M${x-7} 53 Q${x} 43 ${x+7} 53" stroke="#3a1c0a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`:`<circle cx="${x}" cy="51" r="${sh?9.5:8}" fill="#fff"/><circle cx="${x+1}" cy="${sh?51:52}" r="${sh?3.2:5.2}" fill="#3a1c0a"/><circle cx="${x+3}" cy="${sh?49:50}" r="1.8" fill="#fff"/>`;
+ const teeth='<rect x="46.5" y="67" width="7" height="6" rx="2" fill="#fff" stroke="#e5cfae" stroke-width=".6"/>';
+ const mouth=sh?'<ellipse cx="50" cy="73" rx="5" ry="7" fill="#7a1626"/><path d="M82 44q6 9 0 12q-6-3 0-12z" fill="#6ec6ff"/>':hp?'<path d="M39 66Q50 84 61 66Z" fill="#8b1e2e"/>'+teeth:'<path d="M41 67Q50 76 59 67" stroke="#5a2410" stroke-width="2.6" fill="none" stroke-linecap="round"/>'+teeth;
+ const fs=t.length<=4?15:t.length<=6?12.5:t.length<=9?10:8;
+ const hat=t?`<rect x="20" y="8" width="60" height="26" rx="11" fill="${col}"/><rect x="12" y="28" width="76" height="9" rx="4.5" fill="${col}"/><rect x="12" y="33" width="76" height="4" rx="2" fill="#000" opacity=".2"/><rect x="28" y="11" width="30" height="5" rx="2.5" fill="#fff" opacity=".35"/><text x="50" y="${26+(fs<10?-1:0)}" text-anchor="middle" font-size="${fs}" font-weight="900" fill="#fff" stroke="rgba(0,0,0,.45)" stroke-width="2.2" paint-order="stroke" font-family="Tahoma,Arial,sans-serif">${t}</text>`:'';
+ return `<svg viewBox="0 0 100 100"><defs><radialGradient id="fur" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#a06c3e"/><stop offset="1" stop-color="#5e3719"/></radialGradient></defs>
+<ellipse cx="50" cy="84" rx="37" ry="26" fill="url(#fur)"/><ellipse cx="50" cy="92" rx="22" ry="14" fill="#dcaa70"/>
+<ellipse cx="18" cy="42" rx="7" ry="8" fill="#6b4023"/><ellipse cx="82" cy="42" rx="7" ry="8" fill="#6b4023"/>
+<ellipse cx="50" cy="54" rx="36" ry="32" fill="url(#fur)"/><ellipse cx="50" cy="66" rx="18" ry="12.5" fill="#e4b57e"/>
+<ellipse cx="34" cy="40" rx="9" ry="4" fill="#fff" opacity=".18" transform="rotate(-25 34 40)"/>
+<circle cx="26" cy="63" r="6.5" fill="#ff7a7a" opacity=".55"/><circle cx="74" cy="63" r="6.5" fill="#ff7a7a" opacity=".55"/>
+${eye(37)}${eye(63)}<ellipse cx="50" cy="60" rx="6.5" ry="4.8" fill="#ff7f90"/><ellipse cx="48" cy="58.5" rx="2" ry="1.2" fill="#fff" opacity=".7"/>
+${mouth}<ellipse cx="20" cy="93" rx="9" ry="7" fill="#f2a9a9"/><ellipse cx="80" cy="93" rx="9" ry="7" fill="#f2a9a9"/>${hat}</svg>`}
+$('#mm').innerHTML=mSVG('happy','',0);
+
+/* ---------- Questions ---------- */
+const SUBJ=[
+{k:'math',n:'Mathematics',t:'คณิตศาสตร์',e:'🔢',c:'#ff7043'},{k:'eng',n:'English',t:'ภาษาอังกฤษ',e:'🔤',c:'#3d9bf5'},
+{k:'sci',n:'Science',t:'วิทยาศาสตร์',e:'🔬',c:'#27c06a'},{k:'thai',n:'Thai Language',t:'ภาษาไทย',e:'📖',c:'#a74bd0'},
+{k:'soc',n:'Social Studies',t:'สังคมศึกษา',e:'🌏',c:'#f0a800'},{k:'com',n:'Computer',t:'คอมพิวเตอร์',e:'💻',c:'#1fb8d0'},
+{k:'gen',n:'General Knowledge',t:'ความรู้ทั่วไป',e:'💡',c:'#ec407a'}];
+const B={
+eng:`Which word is an animal?|Dog|Pen|Car|Book|Desk
+Which word means "แมว"?|Cat|Dog|Bird|Fish
+Which word is a color?|Red|Table|Cow|Shoe
+Which word is a fruit?|Apple|Bus|Desk|Lion
+Opposite of "Big"|Small|Tall|Fast|Hot
+"Hello" means?|สวัสดี|ลาก่อน|ขอบคุณ|ขอโทษ
+Which word is a number?|Seven|Green|Horse|Cup
+"Thank you" means?|ขอบคุณ|สวัสดี|ขอโทษ|ลาก่อน
+Which is a school item?|Pencil|Tiger|Banana|Sun
+Opposite of "Hot"|Cold|Big|Red|Fast
+Which word means "ปลา"?|Fish|Duck|Bear|Frog`,
+sci:`ข้อใดเป็นดาวเคราะห์?|โลก|ดวงจันทร์|ดวงอาทิตย์|เมฆ
+พืชต้องการอะไรเพื่อเติบโต?|น้ำและแสง|ลูกอม|ทีวี|ความมืด
+สัตว์ใดอาศัยในน้ำ?|ปลา|วัว|แมว|ไก่
+น้ำเดือดกลายเป็นอะไร?|ไอน้ำ|น้ำแข็ง|หิน|ทราย
+ใช้อวัยวะใดมองเห็น?|ตา|หู|จมูก|ปาก
+ข้อใดให้แสงสว่าง?|ดวงอาทิตย์|ก้อนหิน|โต๊ะ|หมอน
+ใช้อวัยวะใดดมกลิ่น?|จมูก|ตา|มือ|เท้า
+สัตว์ใดออกลูกเป็นไข่?|ไก่|แมว|หมา|วัว
+ฤดูที่ฝนตกมาก?|ฤดูฝน|ฤดูหนาว|ฤดูร้อน|ไม่มี
+ข้อใดเป็นดาวฤกษ์?|ดวงอาทิตย์|โลก|ดาวอังคาร|ดวงจันทร์`,
+thai:`ข้อใดเป็นคำกริยา?|วิ่ง|โต๊ะ|สวย|แมว
+คำตรงข้ามของ "ใหญ่"|เล็ก|สูง|ดำ|หนัก
+คำตรงข้ามของ "ร้อน"|เย็น|อุ่น|แดง|เร็ว
+ข้อใดสะกดถูกต้อง?|ผลไม้|ผลใม้|พลไม้|ผนไม้
+ข้อใดเป็นพยัญชนะ?|ก|า|ะ|ิ
+ข้อใดเป็นคำนาม?|หนังสือ|กิน|ดี|เร็ว
+ข้อใดเป็นสระ?|อา|ก|ข|ค
+คำตรงข้ามของ "ดี"|เลว|งาม|สวย|เก่ง
+ข้อใดแสดงการกระทำ?|นอน|เสื้อ|น้ำ|ใหญ่
+คำตรงข้ามของ "ขึ้น"|ลง|วิ่ง|กิน|เดิน`,
+soc:`เมืองหลวงของไทยคืออะไร?|กรุงเทพฯ|เชียงใหม่|ภูเก็ต|ขอนแก่น
+ธงชาติไทยมีกี่สี?|3 สี|2 สี|4 สี|5 สี
+วันแม่แห่งชาติ เดือนใด?|สิงหาคม|มกราคม|เมษายน|ธันวาคม
+วันสงกรานต์ เดือนใด?|เมษายน|มกราคม|กรกฎาคม|ตุลาคม
+เงินสกุลไทยคือ?|บาท|เยน|ดอลลาร์|หยวน
+ประเทศใดติดกับไทย?|ลาว|ญี่ปุ่น|อังกฤษ|อียิปต์
+ใครสอนเราที่โรงเรียน?|ครู|หมอ|ตำรวจ|ช่างไม้
+ใครรักษาคนป่วย?|หมอ|ครู|ชาวนา|นักบิน
+เชียงใหม่อยู่ภาคใด?|ภาคเหนือ|ภาคใต้|ภาคกลาง|ภาคตะวันออก
+วันเด็กแห่งชาติ เดือนใด?|มกราคม|พฤษภาคม|กันยายน|พฤศจิกายน`,
+com:`CPU คืออะไร?|สมองคอม|จอภาพ|ลำโพง|เมาส์
+RAM ใช้ทำอะไร?|ความจำ|พิมพ์|ฉายภาพ|ชาร์จไฟ
+อุปกรณ์ใดใช้พิมพ์ข้อความ?|คีย์บอร์ด|จอภาพ|ลำโพง|เมาส์
+Mouse ใช้ทำอะไร?|ชี้/คลิก|ฟังเสียง|พิมพ์|ทำอาหาร
+Monitor คืออะไร?|จอภาพ|เมาส์|ลำโพง|คีย์บอร์ด
+ลำโพงให้อะไร?|เสียง|ภาพ|ไฟ|ลม
+Printer ทำอะไร?|พิมพ์กระดาษ|ฟังเพลง|ชาร์จไฟ|ตัดผม
+ที่เก็บไฟล์ในคอมคือ?|ฮาร์ดดิสก์|ลำโพง|เมาส์|จอภาพ
+Ctrl+C คืออะไร?|คัดลอก|วาง|ลบ|บันทึก
+Ctrl+V คืออะไร?|วาง|คัดลอก|ลบ|ปิด
+Keyboard คืออะไร?|แป้นพิมพ์|จอภาพ|ลำโพง|กล้อง`,
+gen:`สัตว์ใดบินได้?|นก|ปลา|วัว|ช้าง
+น้ำแข็งเกิดจากอะไร?|น้ำ|ไฟ|หิน|ทราย
+ดวงอาทิตย์เป็นอะไร?|ดาวฤกษ์|ดาวเคราะห์|ดวงจันทร์|เมฆ
+1 สัปดาห์มีกี่วัน?|7 วัน|5 วัน|10 วัน|12 วัน
+1 ปีมีกี่เดือน?|12 เดือน|10 เดือน|7 เดือน|24 เดือน
+ท้องฟ้าตอนกลางวันสีอะไร?|ฟ้า|ดำ|ชมพู|น้ำตาล
+สัตว์ใดเลี้ยงลูกด้วยนม?|แมว|ปลา|นก|งู
+มือหนึ่งข้างมีกี่นิ้ว?|5 นิ้ว|3 นิ้ว|8 นิ้ว|10 นิ้ว
+กลางคืนเรามักเห็นอะไร?|ดวงจันทร์|รุ้ง|ดวงอาทิตย์|หิมะ
+สัตว์ใดว่ายน้ำได้?|ปลา|ม้า|ลิง|ไก่`};
+const XB={
+eng:`E|Which word is a vehicle?|Bus|Egg|Pen|Tree
+E|Which word means "สีเขียว"?|Green|Blue|Pink|Black
+E|Which word means "หนังสือ"?|Book|Bag|Box|Bed
+E|"Dog" is an animal. True or false?|True|False
+E|Which word is a body part?|Hand|Chair|Milk|Road
+E|"Sun" is in the sky. True or false?|True|False
+M|Fill in: I ___ a student.|am|is|are|be
+M|Fill in: She ___ a book.|reads|reading|readed|reader
+M|Plural of "cat"|Cats|Cates|Cat's|Catt
+M|Which one is NOT a fruit?|Carrot|Mango|Banana|Grape
+M|"Goodbye" means?|ลาก่อน|สวัสดี|ขอโทษ|ขอบคุณ
+M|Opposite of "Up"|Down|Left|High|Over
+M|Which word is a day?|Monday|January|Summer|Morning
+M|Which word is a month?|March|Sunday|Winter|Noon
+H|Past tense of "go"|Went|Goed|Goes|Going
+H|Fill in: He ___ a pen.|has|have|haves|having
+H|Opposite of "Early"|Late|Soon|Fast|Slow
+H|Which word means "ยาก"?|Difficult|Easy|Soft|Light
+H|Which one is NOT a color?|Chair|Pink|Gray|Gold`,
+sci:`E|ดวงอาทิตย์ขึ้นทางทิศใด?|ตะวันออก|ตะวันตก|เหนือ|ใต้
+E|สัตว์ใดเลี้ยงลูกด้วยนม?|วาฬ|ปลาทอง|ไก่|งู
+E|น้ำแข็งละลายกลายเป็นอะไร?|น้ำ|ไอน้ำ|หิน|ควัน
+E|ลิ้นใช้ทำอะไร?|รับรส|ดมกลิ่น|ฟังเสียง|มองเห็น
+E|หูใช้ทำอะไร?|ฟังเสียง|รับรส|ดมกลิ่น|สัมผัส
+E|ปลาหายใจด้วยอะไร?|เหงือก|ปอด|หู|ขา
+E|ดวงจันทร์ให้แสงสว่างเองใช่หรือไม่?|ไม่ใช่|ใช่
+M|ดาวเคราะห์ดวงใดอยู่ใกล้ดวงอาทิตย์สุด?|ดาวพุธ|ดาวศุกร์|โลก|ดาวเสาร์
+M|คนเราต้องหายใจเอาก๊าซใด?|ออกซิเจน|ฮีเลียม|ไฮโดรเจน|ก๊าซหุงต้ม
+M|น้ำเดือดที่กี่องศาเซลเซียส?|100|0|50|200
+M|น้ำแข็งแข็งตัวที่กี่องศาเซลเซียส?|0|100|10|-50
+M|ข้อใดไม่ใช่สัตว์?|ต้นไม้|แมว|ปลา|นก
+M|พืชสร้างอาหารด้วยกระบวนการใด?|สังเคราะห์แสง|ย่อย|ระเหย|แข็งตัว
+M|ผู้ผลิตในห่วงโซ่อาหารคือ?|พืช|เสือ|เหยี่ยว|งู
+M|ค้างคาวเป็นสัตว์เลี้ยงลูกด้วยนม จริงไหม?|จริง|ไม่จริง
+H|ดาวเคราะห์ที่มีวงแหวนชัดเจนคือ?|ดาวเสาร์|ดาวพุธ|โลก|ดาวศุกร์
+H|แรงที่ดึงวัตถุลงสู่พื้นโลกคือ?|โน้มถ่วง|แรงลม|แม่เหล็ก|แรงเงา
+H|ข้อใดเป็นของแข็ง?|ก้อนหิน|น้ำ|ไอน้ำ|อากาศ
+H|ข้อใดนำไฟฟ้าได้ดี?|ทองแดง|ยาง|พลาสติก|ผ้า
+H|สีรุ้งมีกี่สี?|7 สี|5 สี|3 สี|9 สี`,
+thai:`E|ตัวใดเป็นสระ?|เ|ม|น|ว
+E|"ช้าง" เป็นคำชนิดใด?|คำนาม|คำกริยา|คำสันธาน|คำอุทาน
+E|"กิน" เป็นคำชนิดใด?|คำกริยา|คำนาม|คำสรรพนาม|คำบุพบท
+E|คำตรงข้ามของ "สูง"|เตี้ย|ยาว|หนัก|อ้วน
+E|คำตรงข้ามของ "ขาว"|ดำ|แดง|เขียว|ฟ้า
+M|ข้อใดเป็นคำสรรพนาม?|ฉัน|โต๊ะ|วิ่ง|สวย
+M|ข้อใดเป็นคำวิเศษณ์?|สวย|กิน|โรงเรียน|ฉัน
+M|คำใดเขียนถูกต้อง?|สะอาด|สาอาด|สะอาต|สะอ๊าด
+M|"ครู" มีพยัญชนะกี่ตัว?|2 ตัว|1 ตัว|3 ตัว|4 ตัว
+M|ข้อใดเป็นวรรณยุกต์?|่|า|ก|เ
+M|ข้อใดไม่ใช่คำกริยา?|ดอกไม้|นั่ง|ยืน|เดิน
+M|ข้อใดไม่ใช่คำนาม?|วิ่ง|แมว|บ้าน|ครู
+M|คำใดมีความหมายเหมือน "สวย"?|งาม|เหม็น|เก่า|ช้า
+M|"ก" เป็นพยัญชนะ จริงไหม?|จริง|ไม่จริง
+H|คำตรงข้ามของ "ซื่อสัตย์"|คดโกง|ขยัน|ใจดี|สุภาพ
+H|คำใดมีความหมายเหมือน "หมา"?|สุนัข|แมว|หมู|วัว
+H|สระเสียงยาวคือข้อใด?|อา|อะ|อิ|อุ
+H|"รัก" มีพยัญชนะกี่ตัว?|2 ตัว|1 ตัว|3 ตัว|4 ตัว
+H|ข้อใดเป็นคำประสม?|แม่น้ำ|กิน|ดี|ฉัน
+H|พยัญชนะอักษรกลางคือ?|ก|ข|ค|ฉ`,
+soc:`E|ธงชาติไทยเรียกว่าอะไร?|ไตรรงค์|ธงชัย|ธงฟ้า|ธงแดง
+E|นักเรียนไปเรียนที่ไหน?|โรงเรียน|ตลาด|โรงพยาบาล|วัด
+E|ใครดับไฟไหม้?|ดับเพลิง|ครู|หมอ|ชาวนา
+E|ใครปลูกข้าว?|ชาวนา|ตำรวจ|นักบิน|พ่อครัว
+E|วันขึ้นปีใหม่สากลคือวันที่?|1 ม.ค.|13 เม.ย.|12 ส.ค.|5 ธ.ค.
+E|เราควรทำตามกฎจราจรหรือไม่?|ควร|ไม่ควร
+M|วันสงกรานต์ตรงกับวันที่?|13 เม.ย.|1 ม.ค.|12 ส.ค.|25 ธ.ค.
+M|ภูเก็ตอยู่ภาคใด?|ภาคใต้|ภาคเหนือ|ภาคอีสาน|ภาคกลาง
+M|ขอนแก่นอยู่ภาคใด?|ภาคอีสาน|ภาคใต้|ภาคเหนือ|ภาคตะวันตก
+M|ประเทศใดอยู่ทางใต้ของไทย?|มาเลเซีย|ลาว|เมียนมา|ญี่ปุ่น
+M|หัวหน้ารัฐบาลไทยคือใคร?|นายกฯ|ครูใหญ่|กำนัน|หมอ
+M|คนไทยส่วนใหญ่นับถือศาสนาใด?|พุทธ|คริสต์|ฮินดู|ซิกข์
+M|แม่น้ำสายสำคัญของกรุงเทพฯ?|เจ้าพระยา|โขง|ยม|ปิง
+M|ไทยมีทะเลล้อมรอบทั้งประเทศ จริงไหม?|ไม่จริง|จริง
+M|ประเทศไทยอยู่ทวีปใด?|เอเชีย|ยุโรป|แอฟริกา|ออสเตรเลีย
+H|ประเทศใดไม่ติดกับไทย?|เวียดนาม|ลาว|กัมพูชา|มาเลเซีย
+H|ภาษาราชการของไทยคือ?|ภาษาไทย|อังกฤษ|จีน|ลาว
+H|สิ่งที่ใช้ลอยในวันลอยกระทงคือ?|กระทง|ว่าว|หมวก|ตะเกียบ
+H|จังหวัดใดอยู่ภาคเหนือ?|ลำปาง|ระยอง|กระบี่|ตรัง`,
+com:`E|ข้อใดเป็นอุปกรณ์รับข้อมูล?|เมาส์|ลำโพง|จอภาพ|เครื่องพิมพ์
+E|ข้อใดเป็นอุปกรณ์แสดงผล?|จอภาพ|คีย์บอร์ด|เมาส์|ไมโครโฟน
+E|ไมโครโฟนใช้ทำอะไร?|รับเสียง|แสดงภาพ|พิมพ์งาน|เก็บไฟล์
+E|คอมพิวเตอร์ต้องใช้ไฟฟ้า จริงไหม?|จริง|ไม่จริง
+E|Laptop เป็นคอมพิวเตอร์แบบใด?|พกพา|ติดผนัง|ตั้งพื้น|ลอยน้ำ
+M|ไฟล์รูปภาพมักมีนามสกุลใด?|.jpg|.mp3|.txt|.zip
+M|ไฟล์เพลงมักมีนามสกุลใด?|.mp3|.jpg|.txt|.exe
+M|Ctrl+Z ใช้ทำอะไร?|ย้อนกลับ|คัดลอก|วาง|พิมพ์
+M|Ctrl+S ใช้ทำอะไร?|บันทึก|วาง|ลบ|ปิด
+M|Wi-Fi ใช้ทำอะไร?|เชื่อมเน็ต|ล้างจาน|ทำอาหาร|ซักผ้า
+M|Browser ใช้ทำอะไร?|เปิดเว็บ|พิมพ์งาน|ชาร์จไฟ|ตัดผม
+M|โปรแกรมใดใช้พิมพ์เอกสาร?|Word|Chrome|Paint|Calculator
+M|โปรแกรมใดใช้วาดภาพ?|Paint|Word|Chrome|Excel
+M|ข้อใดไม่ใช่อุปกรณ์คอมพิวเตอร์?|ตู้เย็น|เมาส์|จอภาพ|คีย์บอร์ด
+H|Excel ใช้ทำอะไรเป็นหลัก?|ตาราง|วาดภาพ|เล่นเกม|ตัดต่อ
+H|USB ใช้ทำอะไร?|เชื่อมต่อ|ล้างจาน|ทำอาหาร|ซักผ้า
+H|บอกรหัสผ่านให้เพื่อนทุกคน ถูกไหม?|ไม่ถูก|ถูก
+H|รหัสผ่านใดปลอดภัยกว่า?|Ab#9xQ2z|1234|password|abc
+H|ไวรัสคอมพิวเตอร์คืออะไร?|โปรแกรมร้าย|ไข้หวัด|อาหาร|เกม
+H|1 Byte มีกี่บิต?|8|2|4|10`,
+gen:`E|ใบไม้ส่วนใหญ่สีอะไร?|เขียว|ม่วง|ดำ|ชมพู
+E|สัตว์บกใดตัวใหญ่ที่สุด?|ช้าง|แมว|หมา|กระต่าย
+E|เรามีตากี่ข้าง?|2 ข้าง|1 ข้าง|3 ข้าง|4 ข้าง
+E|ปลาอาศัยในน้ำ จริงไหม?|จริง|ไม่จริง
+E|ข้อใดเป็นผลไม้?|มะม่วง|ผักบุ้ง|ข้าว|ไข่
+E|วันใดมาก่อนวันจันทร์?|อาทิตย์|อังคาร|พุธ|ศุกร์
+M|1 ชั่วโมงมีกี่นาที?|60|30|100|24
+M|1 วันมีกี่ชั่วโมง?|24|12|60|7
+M|แดงผสมเหลืองได้สีอะไร?|ส้ม|เขียว|ม่วง|น้ำตาล
+M|เหลืองผสมน้ำเงินได้สีอะไร?|เขียว|ส้ม|แดง|ชมพู
+M|สัตว์ใดได้ชื่อว่าราชาป่า?|สิงโต|กระต่าย|เต่า|ไก่
+M|ข้อใดไม่ใช่ผลไม้?|แครอท|ส้ม|องุ่น|กล้วย
+M|โลกหมุนรอบดวงอาทิตย์ จริงไหม?|จริง|ไม่จริง
+M|ประเทศไทยมีกี่ฤดู?|3 ฤดู|2 ฤดู|4 ฤดู|5 ฤดู
+H|ทวีปใดใหญ่ที่สุด?|เอเชีย|ยุโรป|แอฟริกา|ออสเตรเลีย
+H|มหาสมุทรใดใหญ่ที่สุด?|แปซิฟิก|แอตแลนติก|อินเดีย|อาร์กติก
+H|ข้อใดไม่ใช่นก?|ค้างคาว|เพนกวิน|นกฮูก|เป็ด
+H|ปีปกติมีกี่วัน?|365|300|400|100
+H|ปลาวาฬเป็นปลา จริงไหม?|ไม่จริง|จริง
+H|ผีเสื้อมีกี่ขา?|6 ขา|4 ขา|8 ขา|2 ขา`};
+for(const k in XB)B[k]+='\n'+XB[k];
+const XC={
+eng:`E|Which word means "บ้าน"?|House|Horse|Hand|Hat
+E|Which word means "น้ำ"?|Water|Wind|Wall|Wing
+E|Which one can fly?|Bird|Fish|Dog|Cow
+E|Which word is a food?|Rice|Chair|Shoe|Pen
+E|"Red" is a color. True or false?|True|False
+E|Which word means "โต๊ะ"?|Table|Tiger|Tree|Tooth
+E|How many legs does a cat have?|Four|Two|Six|Eight
+E|Which word means "สีเหลือง"?|Yellow|Orange|White|Brown
+E|Where do we study?|School|Zoo|Market|Park
+M|Plural of "box"|Boxes|Boxs|Boxies|Box's
+M|Plural of "child"|Children|Childs|Childes|Childrens
+M|Fill in: They ___ happy.|are|is|am|be
+M|Fill in: It is ___ umbrella.|an|a|on|in
+M|Opposite of "Happy"|Sad|Glad|Kind|Fast
+M|Which word rhymes with "cat"?|Hat|Dog|Cup|Pen
+M|"Tomorrow" means?|พรุ่งนี้|เมื่อวาน|วันนี้|เมื่อคืน
+M|Which one is NOT an animal?|Table|Tiger|Horse|Rabbit
+H|Opposite of "Full"|Empty|Fat|Heavy|Tall
+H|Past tense of "eat"|Ate|Eated|Eats|Eating
+H|Fill in: I have two ___.|brothers|brother|brotherz|brothered
+H|Which word is a verb?|Run|Blue|Happy|Table
+H|Which word means "ฤดูหนาว"?|Winter|Summer|Spring|Autumn`,
+sci:`E|ข้อใดใช้สัมผัสสิ่งต่างๆ?|ผิวหนัง|ผม|เล็บ|ฟัน
+E|สัตว์ใดเดินสองขา?|คน|วัว|ช้าง|แมว
+E|ข้อใดเป็นสัตว์ปีก?|ไก่|ปลา|ช้าง|หมู
+E|ลูกอ๊อดโตเป็นอะไร?|กบ|ปลา|งู|เต่า
+E|กลางคืนบนท้องฟ้ามีอะไร?|ดวงดาว|รุ้ง|ดวงอาทิตย์|หิมะ
+E|ข้อใดเป็นอาหารจากพืช?|ข้าว|ไข่|นม|ปลา
+E|ต้นไม้ดูดน้ำทางส่วนใด?|ราก|ใบ|ดอก|ผล
+E|ก้อนหินเป็นสถานะใด?|ของแข็ง|ของเหลว|แก๊ส|ควัน
+M|ส่วนใดของพืชสังเคราะห์แสง?|ใบ|ราก|ลำต้น|เมล็ด
+M|ลูกโป่งลอยได้เพราะมีก๊าซใด?|ฮีเลียม|ออกซิเจน|ทราย|น้ำ
+M|เสียงเดินทางในสุญญากาศได้ไหม?|ไม่ได้|ได้
+M|ดาวเคราะห์สีแดงคือ?|ดาวอังคาร|ดาวพุธ|ดาวเสาร์|โลก
+M|ดาวเคราะห์ที่ใหญ่ที่สุดคือ?|ดาวพฤหัส|โลก|ดาวพุธ|ดาวอังคาร
+M|ผีเสื้อเติบโตมาจากอะไร?|หนอน|ลูกอ๊อด|ลูกไก่|ลูกปลา
+M|สัตว์ใดกินพืชเป็นอาหาร?|วัว|เสือ|สิงโต|จระเข้
+M|แม่เหล็กดูดสิ่งใดได้?|เหล็ก|ไม้|ยาง|กระดาษ
+H|สัตว์ใดกินทั้งพืชและเนื้อ?|หมี|วัว|ม้า|กระต่าย
+H|หัวใจมีหน้าที่อะไร?|สูบฉีดเลือด|ย่อยอาหาร|หายใจ|มองเห็น
+H|ปอดมีหน้าที่อะไร?|หายใจ|ย่อยอาหาร|ฟังเสียง|ดมกลิ่น
+H|ข้อใดเป็นแก๊ส?|อากาศ|ก้อนหิน|น้ำแข็ง|น้ำ
+H|ดวงจันทร์โคจรรอบอะไร?|โลก|ดวงอาทิตย์|ดาวอังคาร|ดาวพุธ`,
+thai:`E|คำตรงข้ามของ "เปิด"|ปิด|วิ่ง|กิน|นั่ง
+E|คำตรงข้ามของ "หนัก"|เบา|สูง|ช้า|ดำ
+E|คำตรงข้ามของ "ใกล้"|ไกล|ต่ำ|เล็ก|แคบ
+E|คำตรงข้ามของ "สุข"|ทุกข์|ดี|ยิ้ม|หัวเราะ
+E|"โรงเรียน" เป็นคำชนิดใด?|คำนาม|คำกริยา|คำวิเศษณ์|คำสันธาน
+E|"วิ่ง" เป็นคำชนิดใด?|คำกริยา|คำนาม|คำสรรพนาม|คำอุทาน
+E|ข้อใดเป็นชื่อสัตว์?|ม้า|โต๊ะ|หนังสือ|เก้าอี้
+E|ข้อใดเป็นชื่อผลไม้?|มะม่วง|ผักกาด|ข้าวสาร|น้ำตาล
+E|"ไก่" ขึ้นต้นด้วยพยัญชนะตัวใด?|ก|ข|ค|ง
+M|"สวย" เป็นคำชนิดใด?|คำวิเศษณ์|คำกริยา|คำนาม|คำสรรพนาม
+M|"เธอ" เป็นคำชนิดใด?|คำสรรพนาม|คำนาม|คำกริยา|คำวิเศษณ์
+M|ข้อใดเป็นคำอุทาน?|โอ๊ย|กิน|ครู|ใหญ่
+M|ข้อใดเป็นคำบุพบท?|ใน|วิ่ง|แมว|ดี
+M|ข้อใดเป็นคำสันธาน?|และ|นอน|หมา|เล็ก
+M|ข้อใดเป็นสระเสียงสั้น?|อะ|อา|อู|อี
+M|คำใดมีความหมายเหมือน "บ้าน"?|เรือน|ถนน|ทุ่ง|ครัว
+M|คำตรงข้ามของ "ผู้หญิง"|ผู้ชาย|เด็ก|แม่|ครู
+H|ข้อใดเป็นคำควบกล้ำ?|ปลา|นาน|มา|ตา
+H|"น้ำ" มีวรรณยุกต์ใด?|ไม้โท|ไม้เอก|ไม้ตรี|ไม้จัตวา
+H|ข้อใดมี 2 พยางค์?|โรงเรียน|แมว|ตา|ดี
+H|ข้อใดเป็นอักษรสูง?|ข|ก|ค|ง
+H|ข้อใดเป็นอักษรต่ำ?|ค|ก|ข|ฉ
+H|ข้อใดเป็นคำซ้ำ?|เด็กๆ|เด็ก|วิ่ง|กิน`,
+soc:`E|ใครรักษาความปลอดภัยให้ประชาชน?|ตำรวจ|นักบิน|ชาวนา|ครู
+E|ที่พักอาศัยของเราเรียกว่า?|บ้าน|ตลาด|วัด|สวนสัตว์
+E|ใครขายของที่ตลาด?|แม่ค้า|นักบิน|ตำรวจ|หมอ
+E|สถานที่รักษาคนป่วยคือ?|โรงพยาบาล|สนามบิน|ตลาด|สวนสัตว์
+E|เมื่อพบครู เราควรทำอย่างไร?|ไหว้|ตะโกน|วิ่งหนี|แกล้ง
+E|ธงชาติไทยมีสีแดง ขาว และ?|น้ำเงิน|เหลือง|เขียว|ดำ
+E|เราควรทิ้งขยะที่ไหน?|ถังขยะ|แม่น้ำ|ถนน|ห้องเรียน
+M|วันพ่อแห่งชาติตรงกับเดือนใด?|ธันวาคม|สิงหาคม|มกราคม|เมษายน
+M|วันลอยกระทงมักตรงกับเดือนใด?|พฤศจิกายน|เมษายน|มกราคม|สิงหาคม
+M|ประเทศใดอยู่ทางตะวันตกของไทย?|เมียนมา|ลาว|กัมพูชา|เวียดนาม
+M|ประเทศใดอยู่ทางตะวันออกของไทย?|กัมพูชา|เมียนมา|มาเลเซีย|อินเดีย
+M|จังหวัดใดอยู่ภาคกลาง?|อยุธยา|ภูเก็ต|เชียงราย|นครพนม
+M|จังหวัดใดอยู่ภาคใต้?|สงขลา|ลำปาง|ขอนแก่น|ระยอง
+M|จังหวัดใดอยู่ภาคอีสาน?|อุดรธานี|ตรัง|ลำพูน|ตาก
+M|ไฟจราจรสีใดให้หยุด?|แดง|เขียว|ฟ้า|ม่วง
+M|เราควรข้ามถนนที่ใด?|ทางม้าลาย|กลางถนน|ใต้รถ|ข้างรถ
+H|ใครเป็นผู้ปกป้องประเทศ?|ทหาร|ช่างตัดผม|พ่อครัว|ครู
+H|กรุงเทพฯ อยู่ภาคใด?|ภาคกลาง|ภาคใต้|ภาคเหนือ|ภาคอีสาน
+H|ทะเลอันดามันอยู่ฝั่งใดของไทย?|ตะวันตก|ตะวันออก|เหนือ|กลาง
+H|สกุลเงินของญี่ปุ่นคือ?|เยน|บาท|หยวน|ดอลลาร์
+H|ประเทศใดอยู่ติดไทยทางเหนือ?|ลาว|มาเลเซีย|กัมพูชา|อินเดีย
+H|เมืองหลวงของญี่ปุ่นคือ?|โตเกียว|โซล|ปักกิ่ง|ฮานอย`,
+com:`E|ข้อใดคือสมาร์ทโฟน?|มือถือ|ตู้เย็น|พัดลม|เตารีด
+E|ข้อใดใช้ฟังเสียงส่วนตัว?|หูฟัง|เมาส์|เครื่องพิมพ์|กล้อง
+E|เว็บแคมใช้ทำอะไร?|ถ่ายภาพ|พิมพ์|ฟังเพลง|ชาร์จไฟ
+E|ปุ่ม Enter อยู่บนอุปกรณ์ใด?|คีย์บอร์ด|เมาส์|จอภาพ|ลำโพง
+E|ปุ่มซ้ายของเมาส์ใช้ทำอะไร?|คลิก|พิมพ์|ฟังเสียง|พิมพ์งาน
+E|ก่อนปิดคอมควรทำอะไร?|บันทึกงาน|ดึงปลั๊ก|ทุบเครื่อง|ราดน้ำ
+E|ไม่ควรกินอาหารใกล้คอม จริงไหม?|จริง|ไม่จริง
+E|Computer แปลว่าอะไร?|เครื่องคำนวณ|เครื่องซักผ้า|เครื่องบิน|เครื่องปั่น
+M|Google คือสิ่งใด?|เว็บค้นหา|เกม|เครื่องพิมพ์|ลำโพง
+M|โปรแกรมใดใช้นำเสนองาน?|PowerPoint|Paint|Chrome|Notepad
+M|ไฟล์ .txt คือไฟล์อะไร?|ข้อความ|ภาพ|เพลง|วิดีโอ
+M|ไฟล์ .mp4 คือไฟล์อะไร?|วิดีโอ|ข้อความ|ภาพ|ตาราง
+M|Folder ใช้ทำอะไร?|เก็บไฟล์|พิมพ์|ดูหนัง|ทำอาหาร
+M|ปุ่ม Delete ใช้ทำอะไร?|ลบ|คัดลอก|บันทึก|พิมพ์
+M|ปุ่ม Space bar ใช้ทำอะไร?|เว้นวรรค|ลบ|ปิดเครื่อง|ถ่ายภาพ
+M|Email คืออะไร?|จดหมายเน็ต|เกม|ภาพวาด|เพลง
+M|Download คืออะไร?|โหลดลงเครื่อง|ส่งขึ้นเน็ต|ลบไฟล์|พิมพ์งาน
+H|Ctrl+A ใช้ทำอะไร?|เลือกทั้งหมด|คัดลอก|วาง|ลบ
+H|Ctrl+X ใช้ทำอะไร?|ตัด|คัดลอก|วาง|บันทึก
+H|Ctrl+P ใช้ทำอะไร?|พิมพ์|ปิด|ลบ|วาง
+H|ข้อใดเป็นหน่วยความจุข้อมูล?|GB|kg|cm|ml
+H|ข้อใดไม่ใช่เว็บเบราว์เซอร์?|Word|Chrome|Firefox|Edge
+H|ควรกดลิงก์แปลกๆ ในอีเมลไหม?|ไม่ควร|ควร
+H|ข้อใดคือระบบปฏิบัติการ?|Windows|Excel|Paint|Chrome`,
+gen:`E|ข้อใดเป็นสัตว์เลี้ยง?|สุนัข|สิงโต|เสือ|จระเข้
+E|ผักสีส้มคืออะไร?|แครอท|ผักกาด|แตงกวา|บรอกโคลี
+E|ผลไม้สีเหลืองคืออะไร?|กล้วย|แตงโม|มะเขือเทศ|ทับทิม
+E|รุ้งเกิดหลังอะไร?|ฝนตก|หิมะ|ลมพัด|ฟ้าร้อง
+E|สัตว์ใดชอบกินแครอท?|กระต่าย|เสือ|สิงโต|จระเข้
+E|ข้อใดเป็นเครื่องดื่ม?|นม|ข้าว|ผัก|ไข่
+E|ช้างมีงวงใช่หรือไม่?|ใช่|ไม่ใช่
+E|ข้อใดเป็นยานพาหนะทางอากาศ?|เครื่องบิน|เรือ|รถไฟ|จักรยาน
+E|ข้อใดเป็นยานพาหนะทางน้ำ?|เรือ|เครื่องบิน|รถไฟ|รถยนต์
+M|1 เดือนส่วนใหญ่มีกี่สัปดาห์?|4|2|7|10
+M|1 นาทีมีกี่วินาที?|60|10|100|30
+M|ฤดูใดอากาศหนาวที่สุด?|ฤดูหนาว|ฤดูร้อน|ฤดูฝน|ฤดูแล้ง
+M|สัตว์ใดมีลายขาวดำ?|ม้าลาย|สิงโต|ช้าง|หมี
+M|สัตว์ใดมีคอยาวที่สุด?|ยีราฟ|ช้าง|หมี|เสือ
+M|แดงผสมน้ำเงินได้สีอะไร?|ม่วง|เขียว|ส้ม|เหลือง
+M|ข้อใดเป็นเครื่องดนตรี?|กีตาร์|ช้อน|ไม้บรรทัด|จาน
+M|หอไอเฟลอยู่เมืองใด?|ปารีส|โตเกียว|ลอนดอน|โรม
+H|กำแพงเมืองจีนอยู่ประเทศใด?|จีน|ญี่ปุ่น|อินเดีย|อียิปต์
+H|พีระมิดที่มีชื่อเสียงอยู่ประเทศใด?|อียิปต์|ไทย|บราซิล|แคนาดา
+H|สัตว์ใดไม่ใช่สัตว์เลี้ยงลูกด้วยนม?|จระเข้|ช้าง|ค้างคาว|โลมา
+H|เลข 0 อ่านว่าอะไร?|ศูนย์|หนึ่ง|สิบ|ร้อย
+H|เข็มสั้นบนนาฬิกาบอกอะไร?|ชั่วโมง|นาที|วินาที|วัน
+H|ภูเขาที่สูงที่สุดในโลกคือ?|เอเวอเรสต์|ฟูจิ|อินทนนท์|แอลป์
+H|สัตว์ใดหากินกลางคืน?|นกฮูก|ไก่|วัว|ม้า
+H|ทะเลทรายซาฮาราอยู่ทวีปใด?|แอฟริกา|เอเชีย|ยุโรป|ออสเตรเลีย`};
+for(const k in XC)B[k]+='\n'+XC[k];
+for(const k in B)B[k]=B[k].split('\n').map(l=>{const a=l.split('|');let d='E';if(/^[EMH]$/.test(a[0]))d=a.shift();return{d,q:a[0],a:a[1],w:a.slice(2)}});
+function mathGen(L){const R=n=>rnd(n)+1;let q,r;const k=rnd(L==0?3:L==1?5:8);
+ if(k==0){const a=R(9),b=R(9);q=`${a} + ${b} = ?`;r=a+b}
+ else if(k==1){const a=R(10)+5,b=R(a-1);q=`${a} − ${b} = ?`;r=a-b}
+ else if(k==2){const a=R(5)+1,b=R(5)+1;q=`${a} × ${b} = ?`;r=a*b}
+ else if(k==3){const a=R(30)+10,b=R(30)+5;q=`${a} + ${b} = ?`;r=a+b}
+ else if(k==4){const a=R(20),b=R(20);q=`? + ${a} = ${a+b}`;r=b}
+ else if(k==5){const a=R(8)+2,b=R(8)+2;q=`${a} × ${b} = ?`;r=a*b}
+ else if(k==6){const b=R(8)+1,c=R(9)+1;q=`${b*c} ÷ ${b} = ?`;r=c}
+ else{const a=R(30)+20,b=R(9),c=R(9);q=`${a} + ${b} − ${c} = ?`;r=a+b-c}
+ const w=new Set();while(w.size<4){const x=r+rnd(9)-4;if(x!=r&&x>=0)w.add(x)}
+ return{q,a:''+r,w:[...w].map(String)}}
+function pick(){
+ if(G.sub=='math'){let o;for(let t=0;t<40;t++){o=mathGen(G.el<20?0:G.el<40?1:2);if(!G.seen.has(o.q))break}G.seen.add(o.q);return o}
+ if(!G.rem.length)G.rem=B[G.sub].slice();
+ const wt=G.el<20?{E:6,M:1,H:0}:G.el<40?{E:2,M:5,H:1}:{E:1,M:3,H:5};
+ let c=G.rem.filter(q=>q!==G.last);if(!c.length)c=G.rem;
+ const bag=[];c.forEach(q=>{for(let i=0;i<wt[q.d];i++)bag.push(q)});
+ const L=bag.length?bag:c,q=L[rnd(L.length)];G.rem.splice(G.rem.indexOf(q),1);G.last=q;return q}
+
+/* ---------- State ---------- */
+const G={run:false,pause:false,sub:null,score:0,time:60,el:0,cd:0,Q:null};
+const cells=[];let last=performance.now();
+const board=$('#board');
+for(let i=0;i<9;i++){const el=document.createElement('div');el.className='cell';el.dataset.i=i;el.innerHTML='<div class="hole"></div><div class="clip"><div class="mole"></div></div><div class="lip"></div>';board.appendChild(el);cells.push({el,m:el.querySelector('.mole'),st:'free',ok:false,ans:'',life:0,col:''})}
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));$('#'+id).classList.add('on');$('#ham').style.display='none';if(id=='scores')renderScores()}
+function ov(id,on){$('#'+id).classList.toggle('on',on)}
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{G.run=false;show(b.dataset.go)});
+$('#sg').innerHTML=SUBJ.map(s=>`<button class="card" data-k="${s.k}" style="background:${s.c};border-color:#fff #fff rgba(0,0,0,.28)"><i>${s.e}</i><b>${s.n}</b><small>${s.t}</small></button>`).join('');
+$('#sg').onclick=e=>{const c=e.target.closest('.card');if(c)startGame(c.dataset.k)};
+const pad=n=>String(n).padStart(3,'0');
+
+function newQ(){const q=pick();G.Q=q;const e=$('#qb');e.style.animation='none';void e.offsetWidth;e.style.animation='';e.textContent='❓ '+q.q}
+function startGame(k){G.sub=k;G.score=0;G.time=60;G.el=0;G.cd=400;G.Q=null;G.rem=[];G.last=null;G.seen=new Set();G.lh=-1;G.tgt=1;G.pause=false;G.run=true;
+ cells.forEach(c=>{c.st='free';c.m.className='mole'});board.classList.remove('ps');
+ show('game');ov('pause',false);ov('over',false);$('#sc').textContent='000';$('#tb').style.width='100%';$('#tp').classList.remove('warn');newQ();S.start();last=performance.now()}
+function spawn(){const free=cells.filter(c=>c.st=='free');if(!free.length)return;
+ const f2=free.filter(x=>x!==cells[G.lh]),f3=f2.length?f2:free,c=f3[rnd(f3.length)],act=cells.filter(x=>x.st=='up'),has=act.some(x=>x.ok),used=act.map(x=>x.ans);
+ let ok=!has&&(Math.random()<.65||act.length>=2),ans;
+ if(ok)ans=G.Q.a;else{const ws=G.Q.w.filter(w=>!used.includes(w));ans=ws.length?ws[rnd(ws.length)]:G.Q.w[0]}
+ G.lh=cells.indexOf(c);c.ok=ok;c.ans=ans;c.col=HC[rnd(HC.length)];c.st='up';c.life=Math.max(1100,2800-G.el*24)+rnd(700);
+ c.m.innerHTML=mSVG('n',ans,c.col);c.m.classList.add('up')}
+function hideM(c){if(c.st=='free'||c.st=='hid')return;c.st='hid';c.m.classList.remove('up','joy','shk');setTimeout(()=>{c.st='free'},300)}
+function burst(c,list,n){for(let i=0;i<n;i++){const p=document.createElement('i');p.className='pt';p.textContent=list[rnd(list.length)];const a=Math.random()*6.28,d=40+rnd(80);p.style.cssText=`--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d-30}px;left:50%;top:35%`;c.el.appendChild(p);setTimeout(()=>p.remove(),900)}}
+function fl(c,cls,t,col){const p=document.createElement('b');p.className=cls;p.textContent=t;if(col)p.style.color=col;c.el.appendChild(p);setTimeout(()=>p.remove(),900)}
+function setScore(d){G.score=Math.max(0,G.score+d);const e=$('#sc');e.textContent=pad(G.score);e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}
+function resolve(c){
+ if(c.ok){setScore(10);S.ok();c.m.innerHTML=mSVG('happy',c.ans,c.col);c.m.classList.add('joy');
+  burst(c,['🌸','🌼','⭐','✨','🌟','💮'],14);fl(c,'fl','+10','#2fbf3a');
+  cells.forEach(x=>{if(x!==c&&x.st=='up')hideM(x)});newQ();setTimeout(()=>hideM(c),700)}
+ else{setScore(-5);S.bad();c.m.innerHTML=mSVG('shock',c.ans,'#e8362f');c.m.classList.add('shk');
+  fl(c,'xx','✖');fl(c,'fl','−5','#e8362f');const f=$('#flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on');
+  setTimeout(()=>hideM(c),650)}}
+function ring(x,y){const r=document.createElement('div');r.className='ring';r.style.left=x+'px';r.style.top=y+'px';document.body.appendChild(r);setTimeout(()=>r.remove(),400)}
+function ham(x,y){const h=$('#ham');h.style.left=x+'px';h.style.top=y+'px';h.style.display='block'}
+board.addEventListener('pointerdown',e=>{if(!G.run||G.pause)return;e.preventDefault();
+ const x=e.clientX,y=e.clientY,h=$('#ham');ham(x,y);h.classList.remove('sw');void h.offsetWidth;h.classList.add('sw');
+ const ce=e.target.closest('.cell'),c=ce&&cells[+ce.dataset.i];let hitM=c&&c.st=='up';if(hitM)c.st='hit';
+ setTimeout(()=>{S.hit();ring(x,y);if(hitM){burst(c,['💥'],1);resolve(c)}},90)});
+document.addEventListener('pointermove',e=>{if(G.run&&!G.pause&&e.pointerType=='mouse')ham(e.clientX,e.clientY)});
+
+/* ---------- Loop ---------- */
+setInterval(()=>{const n=performance.now(),dt=n-last;last=n;if(!G.run||G.pause)return;
+ G.time-=dt/1000;G.el+=dt/1000;if(G.time<=0){G.time=0;end();return}
+ $('#tm').textContent=Math.ceil(G.time);$('#tb').style.width=G.time/60*100+'%';$('#tp').classList.toggle('warn',G.time<=10);
+ let act=0;
+ cells.forEach(c=>{if(c.st=='up'){act++;c.life-=dt;if(c.life<=0)hideM(c)}});
+ G.cd-=dt;if(act==0||(act<G.tgt&&G.cd<=0)){spawn();G.cd=200+rnd(250);G.tgt=G.el<15?1+rnd(2):G.el<40?2:2+rnd(2)}},50);
+function pause(){if(!G.run||G.pause)return;G.pause=true;board.classList.add('ps');ov('pause',true);$('#ham').style.display='none'}
+function resume(){G.pause=false;board.classList.remove('ps');ov('pause',false);last=performance.now()}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+$('#bPause').onclick=pause;$('#pRes').onclick=resume;$('#pRe').onclick=()=>startGame(G.sub);
+$('#pHome').onclick=()=>{G.run=false;show('menu')};$('#bSnd').onclick=togSnd;$('#bs2').onclick=togSnd;$('#bs3').onclick=togSnd;
+$('#oRe').onclick=()=>startGame(G.sub);$('#oHome').onclick=()=>{G.run=false;show('menu')};
+$('#bclr').onclick=()=>{save([]);$('#bclr').textContent='✅ ล้างแล้ว';setTimeout(()=>$('#bclr').textContent='🗑 ล้างคะแนน',1200)};
+
+/* ---------- Scores ---------- */
+function load(){try{return JSON.parse(localStorage.getItem('htm_scores'))||[]}catch(e){return[]}}
+function save(a){try{localStorage.setItem('htm_scores',JSON.stringify(a))}catch(e){}}
+function end(){G.run=false;cells.forEach(hideM);$('#ham').style.display='none';
+ const a=load(),best=a.length?Math.max(...a.map(x=>x.s)):0,hi=G.score>0&&G.score>best;
+ if(G.score>0){a.push({s:G.score,sub:SUBJ.find(s=>s.k==G.sub).n,d:new Date().toLocaleDateString('th-TH')});a.sort((x,y)=>y.s-x.s);save(a.slice(0,20))}
+ $('#os').textContent='⭐ '+pad(G.score);$('#nh').style.display=hi?'block':'none';$('#tp').classList.remove('warn');ov('over',true);hi?S.high():S.over()}
+function renderScores(){const a=load().slice(0,5);$('#sl').innerHTML=a.length?a.map((x,i)=>`<div class="row"><span>${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${x.s} ⭐</span><span>${x.sub}</span><small>${x.d}</small></div>`).join(''):'ยังไม่มีคะแนน — ไปเล่นกันเลย! 🔨'}
+sndLbl();
+</script></body></html>
